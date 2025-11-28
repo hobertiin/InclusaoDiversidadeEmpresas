@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
+builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 
 #region Configuracao do banco de dados
 var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
