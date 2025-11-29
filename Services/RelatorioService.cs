@@ -1,47 +1,52 @@
-﻿using InclusaoDiversidadeEmpresas.Data;
-using InclusaoDiversidadeEmpresas.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using InclusaoDiversidadeEmpresas.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace InclusaoDiversidadeEmpresas.Services
 {
     public class RelatorioService : IRelatorioService
     {
-        private readonly DatabaseContext _context;
+        // 1. Injeção da interface IColaboradorService
+        private readonly IColaboradorService _colaboradorService;
 
-        public RelatorioService(DatabaseContext context)
+        public RelatorioService(IColaboradorService colaboradorService)
         {
-            _context = context;
+            _colaboradorService = colaboradorService;
         }
 
         public async Task<RelatorioDeDiversidadeModel> GerarRelatorioAsync()
         {
-            // 1. Contagem Total
-            var totalColaborador = await _context.Colaboradores.CountAsync();
+            // 2. Obtém a lista completa de colaboradores através do SERVICE injetado.
+            var colaboradores = await _colaboradorService.GetAllColaboradores();
+            var listaColaboradores = colaboradores.ToList();
 
-            // 2. Contagem de Mulheres
-            var contagemDeMulheres = await _context.Colaboradores
-                .CountAsync(c => c.GeneroColaborador.Equals("Feminino", StringComparison.OrdinalIgnoreCase));
+            // 3. Contagem Total
+            var totalColaborador = listaColaboradores.Count;
 
-            // 3. Contagem de Pessoas Negras
-            var contagemDePessoasNegras = await _context.Colaboradores
-                .CountAsync(c => c.EtniaColaborador.Equals("Preta", StringComparison.OrdinalIgnoreCase) ||
-                                 c.EtniaColaborador.Equals("Parda", StringComparison.OrdinalIgnoreCase));
+            // 4. Contagem de Mulheres (em memória)
+            var contagemDeMulheres = listaColaboradores
+                .Count(c => c.GeneroColaborador.Equals("Feminino", StringComparison.OrdinalIgnoreCase));
 
-            // 4. Contagem de Pessoas com Desabilidade
-            var contagemDePessoasComDesabilidade = await _context.Colaboradores
-                .CountAsync(c => c.TemDisabilidade);
+            // 5. Contagem de Pessoas Negras (em memória)
+            var contagemDePessoasNegras = listaColaboradores
+                .Count(c => c.EtniaColaborador.Equals("Preta", StringComparison.OrdinalIgnoreCase) ||
+                            c.EtniaColaborador.Equals("Parda", StringComparison.OrdinalIgnoreCase));
 
-            // 5. Mapear para o Model de Relatório
+            // 6. Contagem de Pessoas com Desabilidade (em memória)
+            var contagemDePessoasComDesabilidade = listaColaboradores
+                .Count(c => c.TemDisabilidade);
+
+
+            // 7. Mapear para o Model de Relatório
             var relatorio = new RelatorioDeDiversidadeModel
             {
                 DataGerada = DateTime.Now,
                 TotalColaborador = totalColaborador,
                 ContagemDeMulheres = contagemDeMulheres,
                 ContagemDePessoasNegras = contagemDePessoasNegras,
-                ContagemDePessoasComDesabilidade = contagemDePessoasComDesabilidade
+                ContagemDePessoasComDesabilidade = contagemDePessoasComDesabilidade,
             };
 
             return relatorio;

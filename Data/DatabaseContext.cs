@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using InclusaoDiversidadeEmpresas.Models;
-using Microsoft.EntityFrameworkCore.Metadata.Builders; 
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InclusaoDiversidadeEmpresas.Data
 {
@@ -10,15 +10,16 @@ namespace InclusaoDiversidadeEmpresas.Data
         {
         }
 
-       
+
         public DbSet<Colaborador> Colaboradores { get; set; }
         public DbSet<Treinamento> Treinamentos { get; set; }
         public DbSet<ParticipacaoEmTreinamentoModel> ParticipacoesEmTreinamento { get; set; }
+        public DbSet<RelatorioDeDiversidadeModel> RelatoriosDeDiversidade { get; set; }
 
         //CORREÇÃO OBRIGATÓRIA PARA ORACLE: Mapeamento de Tipos 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
-      
+
             configurationBuilder.Properties<bool>()
                 .HaveConversion<long>();
         }
@@ -37,7 +38,7 @@ namespace InclusaoDiversidadeEmpresas.Data
                 entity.Property(c => c.Senha).IsRequired().HasMaxLength(255);
                 entity.HasIndex(c => c.Email).IsUnique();
 
-             
+
                 entity.HasMany(c => c.Participacao)
                       .WithOne(p => p.Colaborador!)
                       .HasForeignKey(p => p.ColaboradorId)
@@ -60,7 +61,7 @@ namespace InclusaoDiversidadeEmpresas.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configuração da Tabela  (ParticipacaoEmTreinamentoModel)
+            // Configuração da Tabela (ParticipacaoEmTreinamentoModel)
             modelBuilder.Entity<ParticipacaoEmTreinamentoModel>(entity =>
             {
                 entity.ToTable("tbl_participacao_treinamento");
@@ -76,6 +77,16 @@ namespace InclusaoDiversidadeEmpresas.Data
                 // Garante unicidade da participação (Colaborador + Treinamento)
                 entity.HasIndex(p => new { p.ColaboradorId, p.TreinamentoId }).IsUnique();
             });
+
+            // MODELBUILDER PARA O RELATÓRIO
+            modelBuilder.Entity<RelatorioDeDiversidadeModel>(entity =>
+            {
+                entity.ToTable("tbl_relatorios_diversidade");
+                entity.HasKey(r => r.Id);
+                entity.Property(r => r.Id).ValueGeneratedOnAdd();
+                entity.Property(r => r.DataGerada).IsRequired();
+            });
+
         }
     }
 }
